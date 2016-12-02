@@ -1,5 +1,6 @@
 package org.livespark.formmodeler.codegen.flow.impl;
 
+import org.assertj.core.api.SoftAssertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.kie.workbench.common.forms.data.modeller.model.DataObjectFormModel;
@@ -17,12 +18,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Created by jsoltes on 11/24/16.
  */
 public class RoasterFlowProducerSourceGeneratorTest {
-    private final String FORM_ID = "myFormID";
-    private final String FORM_NAME = "myFormName";
-    private final String FORM_URI = "/test/";
-    private final String PACKAGE = "org.juraj.mypackage";
-    private final String CLASS_ANNOTATION = "@EntryPoint";
-    private final String FULL_CLASS_NAME = "public class myFormNameFlowProducer extends FlowProducer<myFormName, myFormNameFormModel, myFormNameFormView, myFormNameListView, myFormNameRestService>";
+    private static final String FORM_ID = "myFormID";
+    private static final String FORM_NAME = "myFormName";
+    private static final String FORM_URI = "/test/";
+    private static final String PACKAGE = "org.juraj.mypackage";
+    private static final String CLASS_ANNOTATION = "@EntryPoint";
+    private static final String FULL_CLASS_NAME = "public class myFormNameFlowProducer extends FlowProducer<myFormName, myFormNameFormModel, myFormNameFormView, myFormNameListView, myFormNameRestService>";
 
     private final int PACKAGE_INDEX = 8;
     private final List<String> ABSTRACT_METHODS = Arrays.asList("modelToFormModel", "formModelToModel", "newModel", "getModelType", "getFormModelType");
@@ -33,6 +34,7 @@ public class RoasterFlowProducerSourceGeneratorTest {
                     "return myFormName.class",
                     "return myFormNameFormModel.class");
     private final List<String> PRODUCER_METHODS = Arrays.asList("entityType", "create", "crud", "createAndReview", "view");
+    private final List<String> CRUD_METHODS = Arrays.asList("create", "crud", "createAndReview", "view");
     private final List<String> PRODUCER_METHODS_IMPLEMENTATIONS = Arrays
             .asList("return myFormName.class",
                     "return super.create()",
@@ -84,18 +86,22 @@ public class RoasterFlowProducerSourceGeneratorTest {
         assertThat(getProducerMethodsImplementations()).isEqualTo(PRODUCER_METHODS_IMPLEMENTATIONS);
 
         Map<String, List<String>> methodsAnnotations = getAllMethodsAnnotations();
+        SoftAssertions soft = new SoftAssertions();
         for (String abstractMethod : ABSTRACT_METHODS) {
-            assertThat(methodsAnnotations.get(abstractMethod)).isEqualTo(Arrays.asList("Override"));
+            soft.assertThat(methodsAnnotations.get(abstractMethod)).isEqualTo(Arrays.asList("Override"));
         }
-        for (String producerMethod : PRODUCER_METHODS.subList(1, 5)) {
-            assertThat(methodsAnnotations.get(producerMethod)).containsExactlyElementsOf(Arrays.asList("Override", "Produces", "Singleton", "ForEntity(\"org.juraj.mypackage.myFormName\")", "Named(\"" + producerMethod + "\")"));
+        for (String producerMethod : CRUD_METHODS) {
+            soft.assertThat(methodsAnnotations.get(producerMethod)).containsExactlyElementsOf(Arrays.asList("Override", "Produces", "Singleton", "ForEntity(\"org.juraj.mypackage.myFormName\")", "Named(\"" + producerMethod + "\")"));
         }
+        soft.assertAll();
     }
 
     private Set<String> getImports() {
         Set<String> imports = new HashSet<>();
-        int start = generatedSource.indexOf("import") + 6;
-        if (start != 5) {
+        int start = generatedSource.indexOf("import");
+        final int SHIFT_TO_IMPORT_NAME = 6;
+        if (start != -1) {
+            start += SHIFT_TO_IMPORT_NAME;
             int end;
             char nextChar;
             StringBuilder nextImport;
