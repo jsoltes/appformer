@@ -85,9 +85,6 @@ public abstract class BaseEditor {
     protected Event<NotificationEvent> notification;
 
     @Inject
-    protected VersionRecordManager versionRecordManager;
-
-    @Inject
     protected BasicFileMenuBuilder menuBuilder;
 
     @Inject
@@ -107,10 +104,17 @@ public abstract class BaseEditor {
 
     protected Set<MenuItems> menuItems = new HashSet<MenuItems>();
 
+    protected VersionRecordManager versionRecordManager;
+
     protected PlaceRequest place;
     protected ClientResourceType type;
     protected Integer originalHash;
     private boolean displayShowMoreVersions;
+
+    @Inject
+    public BaseEditor(VersionRecordManager versionRecordManager) {
+        this.versionRecordManager = versionRecordManager;
+    }
 
     protected BaseEditor() {
     }
@@ -131,12 +135,12 @@ public abstract class BaseEditor {
              menuItems);
     }
 
-    protected void init(final ObservablePath path,
-                        final PlaceRequest place,
-                        final ClientResourceType type,
-                        final boolean addFileChangeListeners,
-                        final boolean displayShowMoreVersions,
-                        final MenuItems... menuItems) {
+    public void init(final ObservablePath path,
+                     final PlaceRequest place,
+                     final ClientResourceType type,
+                     final boolean addFileChangeListeners,
+                     final boolean displayShowMoreVersions,
+                     final MenuItems... menuItems) {
 
         init(path,
              place,
@@ -346,7 +350,7 @@ public abstract class BaseEditor {
     /**
      * Effectively the same as reload() but don't reset concurrentUpdateSessionInfo
      */
-    protected void onRename() {
+    public void onRename() {
         refreshTitle();
         baseView.showBusyIndicator(CommonConstants.INSTANCE.Loading());
         loadContent();
@@ -372,7 +376,7 @@ public abstract class BaseEditor {
         baseView.refreshTitle(getTitleText());
     }
 
-    protected void onSave() {
+    public void onSave() {
 
         if (isReadOnly && versionRecordManager.isCurrentLatest()) {
             baseView.alertReadOnly();
